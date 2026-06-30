@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vitor Della Torre dos Santos — control & automation / software</title>
+<meta name="description" content="Vitor Della Torre dos Santos — control & automation engineer and software engineer. Microgrid digital twins, battery forecasting, and systems that hold under load.">
+<meta name="theme-color" content="#05060d">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Vitor Della Torre dos Santos">
+<meta property="og:description" content="Control & automation engineer and software engineer. Energy systems, digital twins, and code that holds under load.">
+<meta property="og:url" content="https://vdella.github.io/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#05060d;
+    --deep:#0b1026;
+    --panel:#0e1430;
+    --plasma:#7c5cff;
+    --signal:#3df0ff;
+    --spark:#ffb347;
+    --starlight:#c8d0f0;
+    --dim:#7a83a8;
+    --line:rgba(124,92,255,.16);
+    --maxw:1120px;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+  body{
+    margin:0;
+    background:var(--void);
+    color:var(--starlight);
+    font-family:var(--body);
+    font-size:17px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  ::selection{background:rgba(124,92,255,.35);color:#fff}
+
+  a{color:inherit;text-decoration:none}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+
+  /* ---------- canvas ---------- */
+  #field{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    display:block;
+  }
+  .veil{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:
+      radial-gradient(80% 55% at 50% 0%, rgba(124,92,255,.12), transparent 70%),
+      radial-gradient(60% 50% at 85% 25%, rgba(61,240,255,.07), transparent 70%),
+      linear-gradient(180deg, transparent 0%, rgba(5,6,13,.35) 60%, var(--void) 96%);
+  }
+  .page{position:relative;z-index:2}
+
+  /* ---------- top bar ---------- */
+  .bar{
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+    border-bottom:1px solid transparent;
+    transition:border-color .4s,background .4s;
+  }
+  .bar.scrolled{
+    background:rgba(5,6,13,.6);
+    border-bottom:1px solid var(--line);
+  }
+  .bar__in{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .mark{
+    font-family:var(--mono);
+    font-size:.82rem;letter-spacing:.18em;
+    color:var(--starlight);
+    display:flex;align-items:center;gap:.6em;
+  }
+  .mark b{font-weight:500}
+  .mark .dot{width:7px;height:7px;border-radius:50%;background:var(--spark);box-shadow:0 0 10px var(--spark)}
+  .navlinks{display:flex;gap:26px;font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;color:var(--dim)}
+  .navlinks a{position:relative;padding:4px 0;transition:color .25s}
+  .navlinks a::after{content:"";position:absolute;left:0;bottom:-2px;width:0;height:1px;background:var(--signal);transition:width .3s}
+  .navlinks a:hover{color:var(--starlight)}
+  .navlinks a:hover::after{width:100%}
+  @media (max-width:620px){.navlinks{display:none}}
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:calc(100vh - 62px);
+    display:flex;flex-direction:column;justify-content:center;
+    padding:80px 0 60px;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:.8rem;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--signal);
+    margin:0 0 26px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .eyebrow::before{content:"";width:34px;height:1px;background:linear-gradient(90deg,var(--signal),transparent)}
+
+  .name{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:clamp(2.7rem,8.5vw,6.4rem);
+    line-height:.97;
+    letter-spacing:-.02em;
+    margin:0;
+    color:#fff;
+  }
+  .name .torre{
+    display:block;
+    background:linear-gradient(110deg,var(--plasma),var(--signal) 55%,var(--spark));
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .thesis{
+    max-width:46ch;
+    font-size:clamp(1.05rem,2.4vw,1.35rem);
+    color:var(--starlight);
+    margin:32px 0 0;
+    line-height:1.55;
+  }
+  .thesis b{color:#fff;font-weight:600}
+
+  .actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:40px}
+  .btn{
+    font-family:var(--mono);
+    font-size:.82rem;letter-spacing:.04em;
+    padding:13px 20px;
+    border-radius:2px;
+    border:1px solid var(--line);
+    color:var(--starlight);
+    display:inline-flex;align-items:center;gap:10px;
+    transition:border-color .25s,color .25s,transform .2s,background .25s;
+  }
+  .btn:hover{border-color:var(--plasma);color:#fff;transform:translateY(-2px);background:rgba(124,92,255,.08)}
+  .btn--primary{border-color:rgba(61,240,255,.4)}
+  .btn--primary:hover{border-color:var(--signal);background:rgba(61,240,255,.08)}
+  .btn .ar{color:var(--spark)}
+
+  .scrollcue{
+    margin-top:64px;
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;
+    color:var(--dim);text-transform:uppercase;
+    display:flex;align-items:center;gap:10px;
+  }
+  .scrollcue .ln{width:1px;height:42px;background:linear-gradient(var(--plasma),transparent);display:inline-block;animation:drip 2.4s ease-in-out infinite}
+  @keyframes drip{0%,100%{opacity:.3;transform:scaleY(.7);transform-origin:top}50%{opacity:1;transform:scaleY(1)}}
+
+  /* ---------- section scaffold ---------- */
+  section{padding:96px 0;position:relative}
+  .stag{
+    font-family:var(--mono);font-size:.76rem;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--plasma);
+    display:flex;align-items:center;gap:14px;margin:0 0 36px;
+  }
+  .stag::before{content:"";width:8px;height:8px;border:1px solid var(--plasma);transform:rotate(45deg)}
+
+  /* ---------- about ---------- */
+  .about__grid{display:grid;grid-template-columns:1.4fr 1fr;gap:56px;align-items:start}
+  @media (max-width:780px){.about__grid{grid-template-columns:1fr;gap:34px}}
+  .about p{font-size:clamp(1.1rem,2.5vw,1.4rem);line-height:1.6;margin:0 0 1em;color:var(--starlight)}
+  .about p b{color:#fff;font-weight:600}
+  .about p:last-child{margin-bottom:0}
+  .facts{font-family:var(--mono);font-size:.84rem;line-height:2;border-left:1px solid var(--line);padding-left:24px;color:var(--dim)}
+  .facts .k{color:var(--signal);display:block;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;margin-top:14px}
+  .facts .k:first-child{margin-top:0}
+  .facts .v{color:var(--starlight)}
+
+  /* ---------- work ---------- */
+  .work__list{display:flex;flex-direction:column;gap:22px}
+  .proj{
+    position:relative;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:linear-gradient(180deg,rgba(14,20,48,.55),rgba(11,16,38,.35));
+    padding:34px 36px;
+    overflow:hidden;
+    transition:border-color .35s,transform .35s,background .35s;
+  }
+  .proj::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+    background:linear-gradient(var(--plasma),var(--signal));
+    transform:scaleY(0);transform-origin:top;transition:transform .4s;
+  }
+  .proj:hover{border-color:rgba(124,92,255,.4);transform:translateY(-3px);background:linear-gradient(180deg,rgba(18,25,58,.7),rgba(11,16,38,.45))}
+  .proj:hover::before{transform:scaleY(1)}
+  .proj__head{display:flex;justify-content:space-between;align-items:baseline;gap:18px;flex-wrap:wrap}
+  .proj__cat{font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--signal)}
+  .proj__idx{font-family:var(--mono);font-size:.74rem;color:var(--dim)}
+  .proj__name{font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,4vw,2.3rem);margin:14px 0 0;color:#fff;letter-spacing:-.01em}
+  .proj__name em{font-style:normal;color:var(--dim);font-weight:600}
+  .proj__desc{margin:14px 0 0;max-width:62ch;color:var(--starlight)}
+  .proj__foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-top:24px}
+  .stack{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0}
+  .stack li{font-family:var(--mono);font-size:.72rem;letter-spacing:.03em;color:var(--dim);border:1px solid var(--line);padding:5px 10px;border-radius:2px}
+  .proj__link{font-family:var(--mono);font-size:.78rem;color:var(--starlight);display:inline-flex;gap:9px;align-items:center;white-space:nowrap;transition:color .25s,gap .25s}
+  .proj__link:hover{color:var(--signal);gap:13px}
+  .proj__link .ar{color:var(--spark)}
+
+  /* ---------- stack constellation ---------- */
+  .const{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .const .cell{background:var(--void);padding:22px 20px;transition:background .3s}
+  .const .cell:hover{background:var(--deep)}
+  .const .cell h4{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--signal);margin:0 0 12px}
+  .const .cell p{margin:0;font-family:var(--mono);font-size:.86rem;line-height:1.9;color:var(--starlight)}
+
+  /* ---------- footer ---------- */
+  footer{padding:90px 0 60px;border-top:1px solid var(--line);position:relative}
+  .foot__top{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap}
+  .foot__cta{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,5vw,3rem);color:#fff;margin:0;line-height:1.05;letter-spacing:-.01em}
+  .foot__cta a{background:linear-gradient(110deg,var(--signal),var(--plasma));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;transition:opacity .25s}
+  .foot__cta a:hover{opacity:.8}
+  .foot__links{display:flex;flex-direction:column;gap:10px;font-family:var(--mono);font-size:.84rem}
+  .foot__links a{color:var(--dim);display:flex;gap:10px;align-items:center;transition:color .25s}
+  .foot__links a:hover{color:var(--signal)}
+  .foot__links a span{color:var(--spark)}
+  .foot__meta{margin-top:54px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:.72rem;color:var(--dim);letter-spacing:.04em}
+
+  /* ---------- reveal ---------- */
+  .rise{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+  .rise.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    .rise{opacity:1;transform:none;transition:none}
+    .scrollcue .ln{animation:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="field" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<div class="page">
+  <header class="bar" id="bar">
+    <div class="wrap bar__in">
+      <a class="mark" href="#top"><span class="dot"></span><b>VITOR</b>&nbsp;DELLA&nbsp;TORRE</a>
+      <nav class="navlinks">
+        <a href="#about">about</a>
+        <a href="#work">work</a>
+        <a href="#stack">stack</a>
+        <a href="#contact">contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="top">
+    <section class="hero" id="hero">
+      <p class="eyebrow">control &amp; automation engineer · software</p>
+      <h1 class="name">Vitor Della<span class="torre">Torre dos Santos</span></h1>
+      <p class="thesis">I build <b>systems that keep their balance</b> — energy that flows, models that predict, and code that holds under load. Right now that means microgrid digital twins, battery forecasting, and the firmware-adjacent C++ that keeps a process control loop honest.</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#work">View work <span class="ar">→</span></a>
+        <a class="btn" href="https://github.com/vdella" target="_blank" rel="noopener">GitHub <span class="ar">↗</span></a>
+      </div>
+      <div class="scrollcue"><span class="ln"></span>scroll to explore the system</div>
+    </section>
+
+    <section id="about">
+      <p class="stag rise">about</p>
+      <div class="about__grid">
+        <div class="about rise">
+          <p>I'm an <b>MSc student in Automation &amp; Systems Engineering</b> at UFSC with a Computer Science background, working where energy systems meet software.</p>
+          <p>My dissertation is a <b>digital-twin component for a microgrid</b> — a 5-cell lithium battery bank you can observe, forecast, and reason about in real time. I write Python every day, keep C++ sharp for the control-loop work, and I'm building toward Go and Rust.</p>
+          <p>The thread through all of it: take a messy physical system, give it a faithful software shadow, and make that shadow useful.</p>
+        </div>
+        <div class="facts rise">
+          <span class="k">based in</span><span class="v">Florianópolis, BR</span>
+          <span class="k">affiliation</span><span class="v">UFSC — Federal Univ. of Santa Catarina</span>
+          <span class="k">domain</span><span class="v">energy systems · digital twins</span>
+          <span class="k">daily driver</span><span class="v">Python · C++ · Linux</span>
+          <span class="k">learning</span><span class="v">Go · Rust</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="work">
+      <p class="stag rise">selected work</p>
+      <div class="work__list">
+
+        <article class="proj rise">
+          <div class="proj__head">
+            <span class="proj__cat">microgrid digital twin</span>
+            <span class="proj__idx">01 / 03</span>
+          </div>
+          <h3 class="proj__name">BVOLT</h3>
+          <p class="proj__desc">A digital twin for a lithium battery bank, built on a hexagonal ports-and-adapters architecture so the physics, the data, and the interfaces stay cleanly separable. A Temporal Fusion Transformer forecasts state-of-charge, while a Modbus → InfluxDB → Grafana pipeline streams live telemetry from cell to dashboard.</p>
+          <div class="proj__foot">
+            <ul class="stack">
+              <li>Python</li><li>Hexagonal</li><li>TFT</li><li>Modbus</li><li>InfluxDB</li><li>Grafana</li><li>CI/CD</li>
+            </ul>
+            <a class="proj__link" href="https://github.com/vdella" target="_blank" rel="noopener">explore <span class="ar">↗</span></a>
+          </div>
+        </article>
+
+        <article class="proj rise">
+          <div class="proj__head">
+            <span class="proj__cat">clinical-safety AI · RAG</span>
+            <span class="proj__idx">02 / 03</span>
+          </div>
+          <h3 class="proj__name">soh-assistant <em>/ Florence</em></h3>
+          <p class="proj__desc">A retrieval-augmented assistant for patient safety at HU-UFSC, the university hospital. Clinical staff ask questions in plain language and get answers grounded in vetted institutional documents instead of a model's guesswork. I built the FastAPI + React + RAG stack, with a CI pipeline and a sanitized public release.</p>
+          <div class="proj__foot">
+            <ul class="stack">
+              <li>FastAPI</li><li>React</li><li>RAG</li><li>OpenAI</li><li>GitHub Actions</li><li>Railway</li>
+            </ul>
+            <a class="proj__link" href="https://github.com/vdella" target="_blank" rel="noopener">explore <span class="ar">↗</span></a>
+          </div>
+        </article>
+
+        <article class="proj rise">
+          <div class="proj__head">
+            <span class="proj__cat">advanced process control · C++</span>
+            <span class="proj__idx">03 / 03</span>
+          </div>
+          <h3 class="proj__name">Petrobras APC <em>— C++ DLL</em></h3>
+          <p class="proj__desc">Advanced Process Control work funded by Petrobras: a C++ dynamic library that plugs into a real optimization stack on the plant side. The job is correctness under pressure — a Google Test suite and Windows CI guard every change, because a control library that silently drifts is worse than no library at all.</p>
+          <div class="proj__foot">
+            <ul class="stack">
+              <li>C++</li><li>DLL</li><li>Google Test</li><li>Windows CI</li><li>Process Control</li>
+            </ul>
+            <span class="proj__link" style="color:var(--dim)">industry · private</span>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section id="stack">
+      <p class="stag rise">the toolkit</p>
+      <div class="const rise">
+        <div class="cell"><h4>languages</h4><p>Python<br>C++<br>Go · Rust<br>SQL</p></div>
+        <div class="cell"><h4>systems</h4><p>Digital twins<br>Modbus / telemetry<br>Hexagonal arch<br>Process control</p></div>
+        <div class="cell"><h4>data &amp; ML</h4><p>Temporal Fusion<br>InfluxDB<br>Forecasting<br>RAG pipelines</p></div>
+        <div class="cell"><h4>platform</h4><p>Linux (Ubuntu)<br>Docker<br>GitHub Actions<br>Railway</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact">
+    <div class="wrap">
+      <div class="foot__top">
+        <p class="foot__cta">Let's put a system<br>into orbit. <a href="mailto:dellatsantos@gmail.com">Say hello →</a></p>
+        <div class="foot__links">
+          <a href="mailto:dellatsantos@gmail.com"><span>◦</span> dellatsantos@gmail.com</a>
+          <a href="https://github.com/vdella" target="_blank" rel="noopener"><span>◦</span> github.com/vdella</a>
+          <a href="https://www.linkedin.com/in/" target="_blank" rel="noopener"><span>◦</span> linkedin — add your handle</a>
+        </div>
+      </div>
+      <div class="foot__meta">
+        <span>Vitor Della Torre dos Santos · Florianópolis, BR</span>
+        <span>built on the charge field · 2026</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- charge field ---------- */
+  var canvas = document.getElementById("field");
+  var ctx = canvas.getContext("2d");
+  var W, H, DPR, stars = [], wave = 0, raf;
+  var pointer = {x:-9999, y:-9999, active:false};
+
+  function size(){
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + "px"; canvas.style.height = H + "px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    build();
+  }
+
+  function build(){
+    var count = Math.min(150, Math.round(W * H / 11000));
+    stars = [];
+    for(var i=0;i<count;i++){
+      stars.push({
+        x: Math.random()*W,
+        y: Math.random()*H,
+        z: Math.random()*0.8 + 0.2,          // depth -> size & speed
+        vx: (Math.random()-0.5)*0.12,
+        vy: (Math.random()-0.5)*0.12,
+        b: Math.random()*0.5 + 0.25,         // base brightness
+        charge: 0
+      });
+    }
+  }
+
+  function hueFor(s){
+    // base starlight, shifting toward plasma/spark when charged
+    var c = s.charge;
+    var r = Math.round(200 + 55*c);
+    var g = Math.round(208 - 40*c + 30*c);
+    var bl = Math.round(240 - 20*c);
+    return "rgba("+r+","+g+","+bl+",";
+  }
+
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    wave += 0.0016;
+    var waveX = (Math.sin(wave)*0.5 + 0.5) * (W + 360) - 180; // sweeping charge front
+    var i, j, s, o;
+
+    // links first (under the stars)
+    ctx.lineWidth = 1;
+    for(i=0;i<stars.length;i++){
+      s = stars[i];
+      for(j=i+1;j<stars.length;j++){
+        o = stars[j];
+        var dx = s.x-o.x, dy = s.y-o.y;
+        var d2 = dx*dx+dy*dy;
+        if(d2 < 13000){
+          var a = (1 - d2/13000) * 0.18 * (0.4 + 0.6*Math.max(s.charge,o.charge));
+          ctx.strokeStyle = "rgba(61,240,255," + a.toFixed(3) + ")";
+          ctx.beginPath();
+          ctx.moveTo(s.x,s.y); ctx.lineTo(o.x,o.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    for(i=0;i<stars.length;i++){
+      s = stars[i];
+      if(!reduce){
+        s.x += s.vx*s.z; s.y += s.vy*s.z;
+        if(s.x<-20)s.x=W+20; if(s.x>W+20)s.x=-20;
+        if(s.y<-20)s.y=H+20; if(s.y>H+20)s.y=-20;
+
+        // charge from the sweeping front
+        var df = Math.abs(s.x - waveX);
+        var target = df < 130 ? (1 - df/130) : 0;
+
+        // pointer gravity ripple
+        if(pointer.active){
+          var px = s.x-pointer.x, py = s.y-pointer.y;
+          var pd = Math.sqrt(px*px+py*py);
+          if(pd < 150){
+            target = Math.max(target, 1 - pd/150);
+            var pull = (1 - pd/150)*0.4;
+            s.x += (px/pd)*pull; s.y += (py/pd)*pull;
+          }
+        }
+        s.charge += (target - s.charge) * 0.06;
+      }
+
+      var size = (s.z*1.7 + 0.5) + s.charge*1.6;
+      var bri = Math.min(1, s.b + s.charge*0.7);
+
+      // glow when charged
+      if(s.charge > 0.15){
+        var gcol = s.charge > 0.7 ? "255,179,71" : "124,92,255";
+        ctx.beginPath();
+        ctx.fillStyle = "rgba("+gcol+","+(s.charge*0.16).toFixed(3)+")";
+        ctx.arc(s.x,s.y,size*4,0,6.2832);
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.fillStyle = hueFor(s) + bri.toFixed(3) + ")";
+      ctx.arc(s.x,s.y,size,0,6.2832);
+      ctx.fill();
+    }
+
+    raf = requestAnimationFrame(frame);
+  }
+
+  window.addEventListener("pointermove", function(e){
+    pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true;
+  }, {passive:true});
+  window.addEventListener("pointerleave", function(){ pointer.active = false; });
+  window.addEventListener("blur", function(){ pointer.active = false; });
+
+  var rt;
+  window.addEventListener("resize", function(){
+    clearTimeout(rt); rt = setTimeout(size, 150);
+  });
+
+  size();
+  if(reduce){ frame(); cancelAnimationFrame(raf); raf=null; ctx.clearRect(0,0,W,H);
+    // single static render for reduced motion
+    (function staticDraw(){
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<stars.length;i++){var s=stars[i];
+        ctx.beginPath();ctx.fillStyle=hueFor(s)+(s.b).toFixed(3)+")";
+        ctx.arc(s.x,s.y,s.z*1.7+0.6,0,6.2832);ctx.fill();}
+    })();
+  } else {
+    frame();
+  }
+
+  /* ---------- scroll reveals ---------- */
+  if("IntersectionObserver" in window && !reduce){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target);} });
+    }, {threshold:0.12, rootMargin:"0px 0px -8% 0px"});
+    document.querySelectorAll(".rise").forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll(".rise").forEach(function(el){ el.classList.add("in"); });
+  }
+
+  /* ---------- bar state ---------- */
+  var bar = document.getElementById("bar");
+  function onScroll(){ if(window.scrollY > 40) bar.classList.add("scrolled"); else bar.classList.remove("scrolled"); }
+  window.addEventListener("scroll", onScroll, {passive:true}); onScroll();
+})();
+</script>
+</body>
+</html>
